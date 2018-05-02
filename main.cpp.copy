@@ -1,0 +1,446 @@
+// zmq libs
+#include <zmq.h>
+#include "stdio.h"
+
+//////////////////
+#include "stdio.h"
+#include <zmq.hpp>
+#include <string>
+#include <iostream>
+#include <unistd.h>
+#include <algorithm>
+//////////////////
+#include <sstream>
+std::string Convert (float number){
+    std::ostringstream buff;
+    buff<<number;
+    return buff.str();   
+}
+
+void * pCtx = NULL; ////////////////使用同一个上下文，并且创建多个socket 进行消息发布
+
+const char *addr1 = "tcp://*:9060";
+void * sock1 = NULL;
+char szMsg1[12000] = {0};
+
+
+const char *addr2 = "tcp://*:9062";
+void * sock2 = NULL;
+char szMsg2[12000] = {0};
+
+const char *addr3 = "tcp://*:9063";
+void * sock3 = NULL;
+char szMsg3[12000] = {0};
+
+const char *addr4 = "tcp://*:9065";
+void * sock4 = NULL;
+char szMsg4[12000] = {0};
+
+const char *addr5 = "tcp://*:9066";
+void * sock5 = NULL;
+char szMsg5[12000] = {0};
+
+const char *addr6 = "tcp://*:9068";
+void * sock6 = NULL;
+char szMsg6[12000] = {0};
+
+
+//======================================================================
+/*! \file IbeoSdkLuxLiveDemo.cpp
+ *
+ * \copydoc Copyright
+ * \author Mario Brumm (mb)
+ * \date Jun 1, 2012
+ *
+ * Demo project for connecting to a LUX and process the received
+ * data blocks.
+ *///-------------------------------------------------------------------
+
+#include <opencv2/core/core.hpp>  
+#include <opencv2/highgui/highgui.hpp>
+
+#include <stdio.h>
+#include <iostream>
+#include <math.h>
+
+#define Rows          400
+#define Cols          160
+#define Precison      12.5
+#define Pi            3.1415926
+
+
+using namespace std;
+using namespace cv;
+
+#include <ibeosdk/lux.hpp>
+#include <ibeosdk/IpHelper.hpp>
+
+#include <ibeosdk/datablocks/commands/CommandLuxReset.hpp>
+#include <ibeosdk/datablocks/commands/CommandLuxGetStatus.hpp>
+#include <ibeosdk/datablocks/commands/CommandLuxGetParameter.hpp>
+#include <ibeosdk/datablocks/commands/CommandLuxSetParameter.hpp>
+#include <ibeosdk/datablocks/commands/EmptyCommandReply.hpp>
+#include <ibeosdk/datablocks/commands/ReplyLuxGetStatus.hpp>
+#include <ibeosdk/datablocks/commands/ReplyLuxGetParameter.hpp>
+#include <ibeosdk/datablocks/commands/CommandLuxSetNtpTimestampSync.hpp>
+
+
+#include <iostream>
+#include <cstdlib>
+
+//======================================================================
+
+using namespace ibeosdk;
+
+//======================================================================
+
+const ibeosdk::Version::MajorVersion majorVersion(5);
+const ibeosdk::Version::MinorVersion minorVersion(2);
+const ibeosdk::Version::Revision revision(2);
+const ibeosdk::Version::PatchLevel patchLevel;
+const ibeosdk::Version::Build build;
+const std::string info = "IbeoSdkLuxLiveDemo";
+
+ibeosdk::Version appVersion(majorVersion, minorVersion, revision, patchLevel, build, info);
+IbeoSDK ibeoSDK;
+
+//======================================================================
+
+void live_demo(LogFileManager& logFileManager, std::string ip);
+
+//======================================================================
+//zmq variables
+
+
+
+
+//======================================================================
+//object string variables
+
+//======================================================================
+
+TimeConversion tc;
+
+//======================================================================
+
+class AllLuxListener : public ibeosdk::DataListener<ScanLux>,
+                       public ibeosdk::DataListener<ObjectListLux>,
+                       public ibeosdk::DataListener<VehicleStateBasicLux>,
+                       public ibeosdk::DataListener<LogMessageError>,
+                       public ibeosdk::DataListener<LogMessageDebug>,
+                       public ibeosdk::DataListener<LogMessageNote>,
+                       public ibeosdk::DataListener<LogMessageWarning> {
+public:
+	virtual ~AllLuxListener() {}
+
+public:
+	//========================================
+	void onData(const ScanLux* const scan)
+	{
+		logInfo << "Scan received: # " << scan->getScanNumber()
+			<< "  time: " << tc.toString(scan->getStartTimestamp().toPtime(), 3)
+			<< "Scan Points: # " << scan->getScanPoints().size()
+			<< std::endl;
+	}
+
+	//========================================
+	void onData(const ObjectListLux* const pObj)
+	{
+		logInfo << "Objects received: # " << pObj->getNumberOfObjects()
+		        << "Object ID: " << pObj->getObjects()[0].getClassification()
+			<< std::endl;
+
+                const std::vector<ObjectLux>& objects = pObj->getObjects();
+                printf("dasfsdaf\n");
+                printf("%d\n",objects.size());
+                printf("\n");
+                string lux1 = "lux1 ";
+                string lux2 = "lux2 ";
+                string lux3 = "lux3 ";
+                string lux4 = "lux4 ";
+                string lux5 = "lux5 ";
+                string lux6 = "lux6 ";
+
+	        for (unsigned int i = 0; i < objects.size(); ++i)
+		{
+		    std::cerr << "Object " << i
+		    << " Has ID: " << objects[i].getObjectId() << std::endl;
+		    std::cerr<< " ObjectBox Center: " << objects[i].getObjectBoxCenter()
+		    << " ObjectBox SizeX: " << objects[i].getObjectBoxSizeX() << std::endl;
+		    std::cerr<< "ObjectBox SizeY: " << objects[i].getObjectBoxSizeY()
+		    << "ObjectBox Orientation: " << objects[i].getObjectBoxOrientation() << std::endl;
+		    std::cerr<< "Object Classification: " << objects[i].getClassification()
+		    << "Object Classification Certainty: " << objects[i].getClassificationCertainty()
+		    << std::endl;
+			
+                    int X1 = objects[i].getObjectBoxCenter().getX() + 0.5*objects[i].getObjectBoxSizeX();
+		    int Y1 = objects[i].getObjectBoxCenter().getY() + 0.5*objects[i].getObjectBoxSizeY();
+		    
+                    int X2 = objects[i].getObjectBoxCenter().getX() + 0.5*objects[i].getObjectBoxSizeX();
+		    int Y2 = objects[i].getObjectBoxCenter().getY() - 0.5*objects[i].getObjectBoxSizeY();
+
+                    int X3 = objects[i].getObjectBoxCenter().getX() - 0.5*objects[i].getObjectBoxSizeX();
+		    int Y3 = objects[i].getObjectBoxCenter().getY() + 0.5*objects[i].getObjectBoxSizeY();
+
+		    int X4 = objects[i].getObjectBoxCenter().getX() - 0.5*objects[i].getObjectBoxSizeX();
+		    int Y4 = objects[i].getObjectBoxCenter().getY() - 0.5*objects[i].getObjectBoxSizeY();
+   
+                    int left = 0;
+                    int right = 0;
+                    left = min(min(Y1,Y2),min(Y3,Y4)) ;
+                    right = max(max(Y1,Y2),max(Y3,Y4)) ;
+                    if( left < -1500 && right < -1500){
+                        continue;
+                    }
+                    if( left > 1500 && right > 1500){
+                        continue;
+                    }
+
+
+		    int Vehicle_Speed = objects[i].getRelativeVelocity().getX();
+
+                    if (objects[i].getClassification() == 1){   //////Unknow Small         
+                        lux1 = lux1 + " " +  Convert(X1) + "," + Convert(Y1) + "," + Convert(X2) + "," + Convert(Y2) + "," + Convert(X3) + "," + Convert(Y3) +","+ Convert(X4) + "," + Convert(Y4) ;
+                    }
+		    else if (objects[i].getClassification() == 2){   //////Unknow Big          
+                        lux2 = lux2 + " " +  Convert(X1) + "," + Convert(Y1) + "," + Convert(X2) + "," + Convert(Y2) + "," + Convert(X3) + "," + Convert(Y3) +","+ Convert(X4) + "," + Convert(Y4) ;
+                    }
+                    else if (objects[i].getClassification() == 3){   ////// Pedestrian        
+                        lux3 = lux3 + " " +  Convert(X1) + "," + Convert(Y1) + "," + Convert(X2) + "," + Convert(Y2) + "," + Convert(X3) + "," + Convert(Y3) +","+ Convert(X4) + "," + Convert(Y4) ;
+                    } 
+                    else if (objects[i].getClassification() == 4){   ////// Bike        
+                        lux4 = lux4 + " " +  Convert(X1) + "," + Convert(Y1) + "," + Convert(X2) + "," + Convert(Y2) + "," + Convert(X3) + "," + Convert(Y3) +","+ Convert(X4) + "," + Convert(Y4) ;
+                    }
+                    else if (objects[i].getClassification() == 5){   ////// Car        
+                        lux5 = lux5 + " " +  Convert(X1) + "," + Convert(Y1) + "," + Convert(X2) + "," + Convert(Y2) + "," + Convert(X3) + "," + Convert(Y3) +","+ Convert(X4) + "," + Convert(Y4) ;
+                    }
+		    else if (objects[i].getClassification() == 6){   ////// Truck        
+                        lux6 = lux6 + " " +  Convert(X1) + "," + Convert(Y1) + "," + Convert(X2) + "," + Convert(Y2) + "," + Convert(X3) + "," + Convert(Y3) +","+ Convert(X4) + "," + Convert(Y4) ;
+                    }
+	        }
+                strcpy(szMsg1,lux1.c_str());
+                strcpy(szMsg2,lux2.c_str());
+                strcpy(szMsg3,lux3.c_str());
+                strcpy(szMsg4,lux4.c_str());
+                strcpy(szMsg5,lux5.c_str());
+                strcpy(szMsg6,lux6.c_str());
+                zmq_send(sock1,szMsg1,sizeof(szMsg1),0);
+                zmq_send(sock2,szMsg2,sizeof(szMsg2),0);
+                zmq_send(sock3,szMsg3,sizeof(szMsg3),0);
+                zmq_send(sock4,szMsg4,sizeof(szMsg4),0);
+                zmq_send(sock5,szMsg5,sizeof(szMsg5),0);
+                zmq_send(sock6,szMsg6,sizeof(szMsg6),0);
+	}
+
+	//========================================
+
+
+	void onData(const VehicleStateBasicLux* const vsb)
+	{
+		logInfo << "VSB for Scan #: " << vsb->getScanNumber() << "  "
+				<< tc.toString(vsb->getTimestamp().toPtime()) << std::endl;
+	}
+
+	//========================================
+	virtual void onData(const LogMessageError* const logMsg)
+	{
+		logInfo << std::setw(5) << logMsg->getSerializedSize() << " Bytes  "
+				<< "LogMessage (Error) received: time: " << logMsg->getTraceLevel() << ": " << logMsg->getMessage() << std::endl;
+	}
+
+	//========================================
+	virtual void onData(const LogMessageWarning* const logMsg)
+	{
+		logInfo << std::setw(5) << logMsg->getSerializedSize() << " Bytes  "
+				<< "LogMessage (Warning) received: time: " << logMsg->getTraceLevel() << ": " << logMsg->getMessage() << std::endl;
+	}
+
+	//========================================
+	virtual void onData(const LogMessageNote* const logMsg)
+	{
+
+		logInfo << std::setw(5) << logMsg->getSerializedSize() << " Bytes  "
+				<< "LogMessage (Note) received: time: " << logMsg->getTraceLevel() << ": " << logMsg->getMessage() << std::endl;
+	}
+
+	//========================================
+	virtual void onData(const LogMessageDebug* const logMsg)
+	{
+		logInfo << std::setw(5) << logMsg->getSerializedSize() << " Bytes  "
+				<< "LogMessage (Debug) received: time: " << logMsg->getTraceLevel() << ": " << logMsg->getMessage() << std::endl;
+	}
+}; // AllLuxListener
+
+
+//======================================================================
+//======================================================================
+//======================================================================
+
+int checkArguments(const int argc, const char** argv, bool& hasLogFile)
+{
+	const int minNbOfNeededArguments = 2;
+	const int maxNbOfNeededArguments = 3;
+
+	bool wrongNbOfArguments = false;
+	if (argc < minNbOfNeededArguments) {
+		std::cerr << "Missing argument" << std::endl;
+		wrongNbOfArguments = true;
+	}
+	else if (argc > maxNbOfNeededArguments) {
+		std::cerr << "Too many argument" << std::endl;
+		wrongNbOfArguments = true;
+	}
+
+	if (wrongNbOfArguments) {
+		std::cerr << argv[0] << " " << " IP [LOGFILE]" << std::endl;
+		std::cerr << "\tIP is the ip address of the LUX sensor, e.g. 192.168.0.1." << std::endl;
+		std::cerr << "\tLOGFILE name of the log file. If ommitted, the log output will be performed to stderr." << std::endl;
+		return 1;
+	}
+
+	hasLogFile = (argc == maxNbOfNeededArguments);
+	return 0;
+}
+
+//======================================================================
+
+int main(const int argc, const char** argv)
+{
+        
+
+	std::cerr << argv[0] << " Version " << appVersion.toString();
+	std::cerr << "  using IbeoSDK " << ibeoSDK.getVersion().toString() << std::endl;
+
+	bool hasLogFile;
+	const int checkResult = checkArguments(argc, argv, hasLogFile);
+	if (checkResult != 0)
+		exit(checkResult);
+	int currArg = 1;
+
+	std::string ip = argv[currArg++];
+
+	const off_t maxLogFileSize = 1000000;
+
+	LogFileManager logFileManager;
+	ibeosdk::LogFile::setTargetFileSize(maxLogFileSize);
+
+	if (hasLogFile) {
+		ibeosdk::LogFile::setLogFileBaseName(argv[currArg++]);
+	}
+	const ibeosdk::LogLevel ll = ibeosdk::logLevelFromString("Debug");
+	ibeosdk::LogFile::setLogLevel(ll);
+
+	logFileManager.start();
+
+	if (hasLogFile) {
+		logInfo << argv[0] << " Version " << appVersion.toString()
+		        << "  using IbeoSDK " << ibeoSDK.getVersion().toString() << std::endl;
+	}
+
+	//zmq
+        if((pCtx = zmq_ctx_new()) == NULL)
+        {
+            return 0;
+        }
+	
+        if((sock1 = zmq_socket(pCtx, ZMQ_PUB)) == NULL)
+        {
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+        if(zmq_bind(sock1 , addr1) < 0)
+        {
+            zmq_close(sock1);
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+
+
+        if((sock2 = zmq_socket(pCtx, ZMQ_PUB)) == NULL)
+        {
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+        if(zmq_bind(sock2 , addr2) < 0)
+        {
+            zmq_close(sock2);
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+
+        if((sock3 = zmq_socket(pCtx, ZMQ_PUB)) == NULL)
+        {
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+        if(zmq_bind(sock3 , addr3) < 0)
+        {
+            zmq_close(sock3);
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+
+        if((sock4 = zmq_socket(pCtx, ZMQ_PUB)) == NULL)
+        {
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+        if(zmq_bind(sock4 , addr4) < 0)
+        {
+            zmq_close(sock4);
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+
+
+        if((sock5 = zmq_socket(pCtx, ZMQ_PUB)) == NULL)
+        {
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+        if(zmq_bind(sock5 , addr5) < 0)
+        {
+            zmq_close(sock5);
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+
+        if((sock6 = zmq_socket(pCtx, ZMQ_PUB)) == NULL)
+        {
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+        if(zmq_bind(sock6 , addr6) < 0)
+        {
+            zmq_close(sock6);
+            zmq_ctx_destroy(pCtx);
+            return 0;
+        }
+
+	live_demo(logFileManager, ip);
+
+	exit(0);
+	
+}
+
+//======================================================================
+
+void live_demo(LogFileManager& logFileManager, std::string ip)
+{
+	AllLuxListener allLuxListener;
+
+	const uint16_t port = getPort(ip, 12002);
+	IbeoLux lux(ip, port);
+	lux.setLogFileManager(&logFileManager);
+
+	lux.registerListener(&allLuxListener);
+
+	lux.getConnected();
+
+	// Just to keep the program alive
+	while (true) {
+		if (!lux.isConnected())
+			return;
+	}
+}
+//======================================================================
